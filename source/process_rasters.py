@@ -17,6 +17,7 @@ import logging
 from pathlib import Path
 #import matplotlib.pyplot as plt
 
+from tqdm import tqdm
 from shapely.geometry import box
 import numpy as np
 import pandas as pd
@@ -93,9 +94,8 @@ def main(input_dir: str, output_dir: str) -> None:
     logging.info(f"Found {len(rasters)} raster files.")
 
     # For debugging
-    rasters = rasters[10:12]
-
-    for raster in rasters:
+    for raster in tqdm(rasters):
+        
         in_path = os.path.join(input_dir, raster)
         out_path = os.path.join(output_dir, raster)
         clip_raster_to_valid(in_path, out_path)
