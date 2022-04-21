@@ -1,18 +1,25 @@
+'''
+Write image chips. Example of use
 
-import glob
+Example of use:
+
+python source/generate_image_chips.py --image_1 data/aoi_1/raster/2019_2021_processed/2019_07_16.tif \
+--image_2 data/aoi_1/raster/2019_2021_processed/2020_07_15.tif \
+--labels data/sample_data/DETER/deter_public.shp \
+--out_directory data/aoi_1/raster/workdir/examples_script/ \
+
+
+'''
+import pdb
 import os
 from pathlib import Path
-import matplotlib.pyplot as plt
-import sys
 import argparse
 import logging
 from typing import List
 
 from shapely.geometry import box, Polygon
-import numpy as np
 import pandas as pd
 import rasterio
-from rasterio.windows import get_data_window, transform, shape
 import geopandas as gpd
 import pandas as pd
 from pandas import Timestamp
@@ -97,7 +104,7 @@ def filter_gdf_by_time(gdf: gpd.GeoDataFrame, date_column: str,
         gpd.GeoDataFrame: filtered gdf
     """
     assert len(gdf) > 0, "Attempting to filter an empty GeoDataFrame"
-    
+    #pdb.set_trace()
     try:
         gdf['date'] = pd.to_datetime(gdf[date_column])
     except:
@@ -107,7 +114,7 @@ def filter_gdf_by_time(gdf: gpd.GeoDataFrame, date_column: str,
         (gdf['date'] > (start_date + margin_before).strftime('%Y-%m-%d')) 
         & (gdf['date'] < (end_date - margin_after).strftime('%Y-%m-%d'))]
 
-    assert len(temporal_subset) > 0, "No features left after filtering by geometry"
+    assert len(temporal_subset) > 0, "No features left after filtering by time"
 
     return temporal_subset
 
@@ -124,7 +131,7 @@ def filter_gdf_by_geometry(gdf: gpd.GeoDataFrame,
         gpd.GeoDataFrame: Filtered gdf 
     """
     assert len(gdf) > 0, "Attempting to filter an empty GeoDataFrame"
-    assert (gdf.intersects(geometry)).any().values[0], "Geometry and GeoDataFrame don't intersect"
+    assert (gdf.intersects(geometry)).any(), "Geometry and GeoDataFrame don't intersect"
     subset_gdf = gdf.loc[gdf.intersects(geometry)].copy()
     assert len(subset_gdf) > 0, "No features left after filtering by geometry"
 
@@ -180,7 +187,7 @@ def filter_reference_data(image_before_path: str,
     """
 
     start_date = get_raster_date(image_before_path)
-    end_date = get_raster_date(image_before_path)
+    end_date = get_raster_date(image_after_path)
 
     margin_before = pd.to_timedelta(margin_before, unit='d')
     margin_after = pd.to_timedelta(margin_after, unit='d')
@@ -188,19 +195,19 @@ def filter_reference_data(image_before_path: str,
     crs_1, crs_2 = get_epsg(image_before_path), get_epsg(image_after_path)
     assert crs_1 == crs_2, f"Rasters don't have the same CRS: '{crs_1}' and '{crs_2}' "
 
-    intersection = get_raster_intersection(image_before_path, image_after_path)
+    intersection = get_raster_intersection([image_before_path, image_after_path])
 
     reference_data_gdf = gpd.read_file(reference_data_path).to_crs(crs_1)
 
 
     filtered_reference_data = filter_gdf_by_geometry(reference_data_gdf, intersection)
-    filtered_reference_data = filter_gdf_by_time(filtered_reference_data, start_date, end_date,
-        date_column, margin_before, margin_after,)
-
+    filtered_reference_data = filter_gdf_by_time(filtered_reference_data,date_column,
+                                                 start_date, end_date,
+                                                 margin_before, margin_after,)
 
     logging.info(f"Number of applicable polygons found: {filtered_reference_data.shape[0]}")
 
-    return filter_reference_data
+    return filtered_reference_data
 
 
 
@@ -214,6 +221,7 @@ def main(image_before_path: str,
          out_directory: str
          ) -> None:
 
+    Path(out_directory).mkdir(parents=True, exist_ok=True)
 
     reference_data = filter_reference_data(image_before_path, image_after_path, 
                                            margin_before, margin_after,
@@ -222,8 +230,10 @@ def main(image_before_path: str,
     # The envelope of a geometry is the bounding rectangle. 
     # That is, the point or smallest rectangular polygon 
     # (with sides parallel to the coordinate axes) that contains the geometry.
-    reference_data['bbox'] = reference_data.envelope.buffer(buffer)
-
+    try:
+        reference_data['bbox'] = reference_data.envelope.buffer(buffer)
+    except:
+        pdb.set_trace()
 
     for idx, row in reference_data.iterrows():
         write_image_chip(row.bbox, image_before_path, idx, out_directory)
