@@ -230,14 +230,18 @@ def main(image_before_path: str,
     # The envelope of a geometry is the bounding rectangle. 
     # That is, the point or smallest rectangular polygon 
     # (with sides parallel to the coordinate axes) that contains the geometry.
-    try:
-        reference_data['bbox'] = reference_data.envelope.buffer(buffer)
-    except:
-        pdb.set_trace()
-
+    reference_data['geometry'] = reference_data.envelope.buffer(buffer)
+    #The order of the envelop+buffer and dissolve lines is not clear; 
+    #if env+buffer are first, then some polygons are joined even if 
+    # they are not touching but are just close. IMO that's ok 
+    
+    reference_data = reference_data.dissolve().explode()
+    assert False, "i need to fix this - double indexing of when exploding results in nonsense naming of the image chips"
+    
+    
     for idx, row in reference_data.iterrows():
-        write_image_chip(row.bbox, image_before_path, idx, out_directory)
-        write_image_chip(row.bbox, image_after_path, idx, out_directory)
+        write_image_chip(row.geometry, image_before_path, idx, out_directory)
+        write_image_chip(row.geometry, image_after_path, idx, out_directory)
 
 
 
