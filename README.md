@@ -16,6 +16,41 @@ Sentinel-2 time series have been acquired from Google Earth Engine. Data from af
 
 ### Reference data processing
 
+Brief description of each dataset:
+
+DETER
+- based on data from multiple sensors, 
+- updated with every new acquisition, 
+- manually verified, 
+- polygons
+- managed by INPE, 
+- quite noisy, polygons oversimplifed; both FP and FN
+
+PRODES
+- yearly
+- manually verified
+- raster (30m); maybe also available as vector
+- managed by INPE
+- high quality
+
+MapBiomas
+- updated approx. monthly
+- polygons
+- overcomplicated polygons
+- varying quality, but sometimes can be extremely precise
+- some manual work also included
+- sometimes very inprecise date
+
+GLAD
+- managed by UMD
+- based on Landsat
+- points
+
+RADD
+- managed by WUR
+- based on Sentinel-1
+- points
+- catches more of the border between F/NF
 
 ### Generating training data
 
