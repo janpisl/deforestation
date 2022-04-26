@@ -3,10 +3,11 @@ Write image chips. Example of use
 
 Example of use:
 
-python source/generate_image_chips.py --image_1 data/aoi_1/raster/2019_2021_processed/2019_07_16.tif \
+python source/generate_image_chips.py \
+> --image_1 data/aoi_1/raster/2019_2021_processed/2019_07_16.tif \
 --image_2 data/aoi_1/raster/2019_2021_processed/2020_07_15.tif \
 --labels data/sample_data/DETER/deter_public.shp \
---out_directory data/aoi_1/raster/workdir/examples_script/ \
+--out_directory data/aoi_1/raster/workdir/image_chips/2019_07_16__2020_07_15/
 
 
 '''
@@ -24,6 +25,30 @@ import geopandas as gpd
 import pandas as pd
 from pandas import Timestamp
 from rasterio.mask import mask
+
+
+def set_logging_level(level: str) -> None:
+    """
+
+    Args:
+        level (str): logging level
+
+    Raises:
+        ValueError: if level string is unknown
+    """
+    level = level.lower()
+    if level == 'debug':
+        logging.basicConfig(level=logging.DEBUG)
+    elif level == 'info':
+        logging.basicConfig(level=logging.INFO)
+    elif level == 'warning':
+        logging.basicConfig(level=logging.WARNING)        
+    elif level == 'error':
+        logging.basicConfig(level=logging.ERROR)  
+    elif level == 'critical':
+        logging.basicConfig(level=logging.CRITICAL)
+    else:
+        raise ValueError(f"Allowed logging values are debug, info, warning, error, critical. Got '{level}'")  
 
 
 def get_raster_intersection(rasters: List) -> Polygon:
@@ -227,17 +252,16 @@ def main(image_before_path: str,
                                            margin_before, margin_after,
                                            reference_data_path, date_column)
 
+
+    # To get rid of overlapping polygons, all polygons are dissolved into single multipolygon;
+    # and the multipolygon is then exploded into individual polygons
+    reference_data = reference_data.dissolve().explode().reset_index().drop(['level_0', 'level_1'], axis=1)
+
     # The envelope of a geometry is the bounding rectangle. 
     # That is, the point or smallest rectangular polygon 
     # (with sides parallel to the coordinate axes) that contains the geometry.
     reference_data['geometry'] = reference_data.envelope.buffer(buffer)
-    #The order of the envelop+buffer and dissolve lines is not clear; 
-    #if env+buffer are first, then some polygons are joined even if 
-    # they are not touching but are just close. IMO that's ok 
-    
-    reference_data = reference_data.dissolve().explode()
-    assert False, "i need to fix this - double indexing of when exploding results in nonsense naming of the image chips"
-    
+
     
     for idx, row in reference_data.iterrows():
         write_image_chip(row.geometry, image_before_path, idx, out_directory)
@@ -263,10 +287,14 @@ if __name__ == "__main__":
     parser.add_argument("--buffer", "-b", type=int, default=100, help="Buffer around deforestation polygons in meters")
     parser.add_argument("--out_directory", "-out", type=str, help="Destination where examples will be written", required=True)
     parser.add_argument("--date_column", "-d", type=str, default='VIEW_DATE', help="Buffer around deforestation polygons in meters")
+    parser.add_argument("--logging", "-log", type=str, default='info', help="Logging level")
+
+
 
 
     args = parser.parse_args()
 
+    set_logging_level(args.logging)
 
     main(args.image_1, 
          args.image_2, 
