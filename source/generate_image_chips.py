@@ -155,6 +155,7 @@ def filter_gdf_by_geometry(gdf: gpd.GeoDataFrame,
     Returns:
         gpd.GeoDataFrame: Filtered gdf 
     """
+    assert isinstance(geometry, Polygon), "Specified geometry must be a shapely Polygon"
     assert len(gdf) > 0, "Attempting to filter an empty GeoDataFrame"
     assert (gdf.intersects(geometry)).any(), "Geometry and GeoDataFrame don't intersect"
     subset_gdf = gdf.loc[gdf.intersects(geometry)].copy()
