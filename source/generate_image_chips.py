@@ -1,5 +1,5 @@
 '''
-Write image chips. Example of use
+Write image chips.
 
 Example of use:
 
@@ -7,10 +7,10 @@ python source/generate_image_chips.py \
 > --image_1 data/aoi_1/raster/2019_2021_processed/2019_07_16.tif \
 --image_2 data/aoi_1/raster/2019_2021_processed/2020_07_15.tif \
 --labels data/sample_data/DETER/deter_public.shp \
---out_directory data/aoi_1/raster/workdir/image_chips/2019_07_16__2020_07_15/
-
-
+--out_directory data/aoi_1/raster/image_chips/2019_07_16__2020_07_15/
 '''
+
+
 import pdb
 import os
 from pathlib import Path
@@ -269,7 +269,6 @@ def main(image_before_path: str,
 
 
 
-
 if __name__ == "__main__":
 
 
@@ -288,8 +287,6 @@ if __name__ == "__main__":
     parser.add_argument("--out_directory", "-out", type=str, help="Destination where examples will be written", required=True)
     parser.add_argument("--date_column", "-d", type=str, default='VIEW_DATE', help="Buffer around deforestation polygons in meters")
     parser.add_argument("--logging", "-log", type=str, default='info', help="Logging level")
-
-
 
 
     args = parser.parse_args()
