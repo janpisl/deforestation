@@ -20,7 +20,7 @@ Brief description of each dataset:
 
 DETER
 - based on data from multiple sensors, 
-- updated with every new acquisition, 
+- updated with every new acquisition, but published monthly?
 - manually verified, 
 - polygons
 - managed by INPE, 
@@ -32,6 +32,7 @@ PRODES
 - raster (30m); maybe also available as vector
 - managed by INPE
 - high quality
+- ignores deforestations under 6.25ha
 
 MapBiomas
 - updated approx. monthly
@@ -45,6 +46,7 @@ GLAD
 - managed by UMD
 - based on Landsat
 - points
+- GLAD-S2?
 
 RADD
 - managed by WUR
